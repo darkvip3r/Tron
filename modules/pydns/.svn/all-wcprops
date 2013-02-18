@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/fatal-bot/!svn/ver/176/trunk/modules/pydns
+END
+Opcode.py
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/fatal-bot/!svn/ver/176/trunk/modules/pydns/Opcode.py
+END
+Base.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/fatal-bot/!svn/ver/176/trunk/modules/pydns/Base.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/fatal-bot/!svn/ver/176/trunk/modules/pydns/__init__.py
+END
+lazy.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/fatal-bot/!svn/ver/176/trunk/modules/pydns/lazy.py
+END
+Type.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/fatal-bot/!svn/ver/176/trunk/modules/pydns/Type.py
+END
+Status.py
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/fatal-bot/!svn/ver/176/trunk/modules/pydns/Status.py
+END
+Class.py
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/fatal-bot/!svn/ver/176/trunk/modules/pydns/Class.py
+END
+Lib.py
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/fatal-bot/!svn/ver/176/trunk/modules/pydns/Lib.py
+END
+win32dns.py
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/fatal-bot/!svn/ver/176/trunk/modules/pydns/win32dns.py
+END

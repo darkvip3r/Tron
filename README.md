@@ -41,7 +41,7 @@ DEFAULT_NICK = Tron
 #-----------------------------
 KEEP_ALIVE = 300
 
-# Jabber accounts that will administrate fatal
+# Jabber accounts that will administrate Tron
 #---------------------------------------------
 ADMINS = marcus@socialzone.mine.nu
 ADMIN_PASSWORD = ************

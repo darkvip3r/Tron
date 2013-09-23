@@ -13,8 +13,8 @@ import os
 
 
 os.chdir(os.path.dirname(sys.argv[0]))
+sys.path.insert(0, 'core.zip')
 
-sys.path.insert(1, 'modules')
 import xmpp
 import time
 import threading
@@ -186,7 +186,7 @@ AFFILIATIONS={'none':0, 'member':1, 'admin':5, 'owner':15}
 LAST = {'c':'', 't':0, 'gch':{}}
 INFO = {'start': 0, 'msg': 0, 'prs':0, 'iq':0, 'cmd':0, 'thr':0}
 
-SVN_REPOS = 'http://code.google.com/p/tron4'
+SVN_REPOS = 'http://tron-jabberbot.googlecode.com/svn/trunk/tron-jabberbot/'
 
 REVISION = get_revision()
 BOT_VER = {'rev': REVISION, 'botver': {'name': 'Tron', 'ver': 'v4%s', 'os': 'PyTron'}}
@@ -1085,158 +1085,126 @@ def dcHnd():
 ################################################################################
 
 def start():
-	try:
-		(USERNAME, SERVER) = JID.split("/")[0].split("@")
-	except:
-		print 'Wrong, wrong JID %s' % JID
-		os.abort()
-	print '\n......Tron starting ...\n'
-	global JCON
-	global CON
-	JCON = xmpp.Client(server=SERVER, port=PORT, debug=[])
-	
-	init_dynamic()
-	load_plugins()
+   try:
+      (USERNAME, SERVER) = JID.split("/")[0].split("@")
+   except:
+      print 'Wrong, wrong JID %s' % JID
+      os.abort()
+   print 'Starting tron\n '
+                 
+   global JCON
+   JCON = xmpp.Client(server=SERVER, port=PORT, debug=[])
+   
+   load_plugins()
+   
+   print 'Waiting For Connection...\n'
 
-	print 'Waiting For Connection...\n'
+   con=JCON.connect(server=(CONNECT_SERVER, PORT), secure=0,use_srv=True)
+   if not con:
+      print 'COULDN\'T CONNECT\nSleep for 30 seconds'
+      time.sleep(30)
+      sys.exit(1)
+   else:
+      print 'Connection Established'
 
-	con=JCON.connect(server=(CONNECT_SERVER, PORT), proxy=PROXY,secure=USE_TLS_SSL, use_srv=True)
-	if not con:
-		print 'COULDN\'T CONNECT\nSleep for 30 seconds'
-		time.sleep(30)
-		sys.exit(1)
-	else:
-		print 'Connection to the server....'
+   print 'Using',JCON.isConnected()
 
-	print 'Using',JCON.isConnected()
+   print '\nWaiting For Authentication...'
 
-	print '\nAuthenticating...'
+   auth=JCON.auth(USERNAME, PASSWORD, RESOURCE)
+   if not auth:
+      print 'Auth Error. Incorrect login/password?\nError: ', JCON.lastErr, JCON.lastErrCode
+      sys.exit(1)
+   else:
+      print 'Logged In'
+   if auth!='sasl':
+      print 'Warning: unable to perform SASL auth. Old authentication method used!'
+      
+   for process in STAGE0_INIT:
+      with smph:
+         INFO['thr'] += 1
+         threading.Thread(None,process,'stage0_init'+str(INFO['thr'])).start()
 
-	auth=JCON.auth(USERNAME, PASSWORD, RESOURCE)
-	if not auth:
-		print 'Wrong Jid Or password?\nError: ', JCON.lastErr, JCON.lastErrCode
-		sys.exit(1)
-	else:
-		print 'Logged In'
-	if auth!='sasl':
-		print 'Warning: unable to perform SASL auth. Old authentication method used!'
-		
-	for process in STAGE0_INIT:
-		with smph:
-			INFO['thr'] += 1
-			try:
-				threading.Thread(None,process,'stage0_init'+str(INFO['thr'])).start()
-			except RuntimeError:
-				if ERRORS_DELIVERY:
-					msg(ADMINS[0],traceback.format_exc(0))
-				else:
-					traceback.print_exc()
-					
-	JCON.RegisterHandler('message', messageHnd)
-	JCON.RegisterHandler('presence', presenceHnd)
-	JCON.RegisterHandler('iq', iqHnd)
-	JCON.RegisterDisconnectHandler(dcHnd)
-	JCON.UnregisterDisconnectHandler(JCON.DisconnectHandler)
-	print 'Handlers Registered'
-	
-	ibb = xmpp.filetransfer.IBB()
-	ibb.PlugIn(JCON)
-	
-	JCON.sendInitPresence()
+   JCON.RegisterHandler('message', messageHnd)
+   JCON.RegisterHandler('presence', presenceHnd)
+   JCON.RegisterHandler('iq', iqHnd)
+   JCON.RegisterDisconnectHandler(dcHnd)
+   JCON.UnregisterDisconnectHandler(JCON.DisconnectHandler)
+   print 'Handlers Registered'
+   
+   JCON.getRoster()
+   JCON.sendInitPresence()
 
-	global ROSTER
-	ROSTER = JCON.getRoster()
-	
-	if check_file(file='chatrooms.list'):
-		groupchats = eval(read_file(GROUPCHAT_CACHE_FILE))
-		print 'Entering %s Rooms' % str(len(groupchats))
-		for groupchat in groupchats:
-			get_gch_cfg(groupchat)
-			MACROS.init(groupchat)
-			for process in STAGE1_INIT:
-				with smph:
-					INFO['thr'] += 1
-					try:
-						threading.Thread(None,process,'stage1_init'+str(INFO['thr']),(groupchat,)).start()
-					except RuntimeError:
-						if ERRORS_DELIVERY:
-							msg(ADMINS[0],traceback.format_exc(0))
-						else:
-							traceback.print_exc()
+   if check_file(file='chatrooms.list'):
+      groupchats = eval(read_file(GROUPCHAT_CACHE_FILE))
+      print 'Entering %s Rooms' % str(len(groupchats))
+      for groupchat in groupchats:
+         get_gch_cfg(groupchat)
+         MACROS.init(groupchat)
+         for process in STAGE1_INIT:
+            with smph:
+               INFO['thr'] += 1
+               threading.Thread(None,process,'stage1_init'+str(INFO['thr']),(groupchat,)).start()
+         write_file('dynamic/'+groupchat+'/config.cfg', str(GCHCFGS[groupchat]))
+         with smph:
+            INFO['thr'] += 1
+            threading.Thread(None,join_groupchat,'gch'+str(INFO['thr']),(groupchat,groupchats[groupchat]['nick'] if groupchats[groupchat]['nick'] else DEFAULT_NICK,groupchats[groupchat]['passw'])).start()
+            if groupchat in LAST['gch'].keys():
+               if GCHCFGS[groupchat]['autoaway']==1:
+                  LAST['gch'][groupchat]['thr']=threading.Timer(600,change_bot_status,(groupchat, u'auto away due to being idle '+time.strftime('%d.%m.%Y@%H:%M:%S GMT', time.gmtime()), 'away',1))
+                  LAST['gch'][groupchat]['thr'].start()
+   else:
+      print 'Error: unable to create chatrooms list file!'
 
-			write_file('dynamic/'+groupchat+'/config.cfg', str(GCHCFGS[groupchat]))
-			with smph:
-				INFO['thr'] += 1
-				try:
-					threading.Thread(None,join_groupchat,'gch'+str(INFO['thr']),(groupchat,groupchats[groupchat]['nick'] if groupchats[groupchat]['nick'] else DEFAULT_NICK,groupchats[groupchat]['passw'])).start()
-				except RuntimeError:
-					if ERRORS_DELIVERY:
-						msg(ADMINS[0],traceback.format_exc(0))
-					else:
-						traceback.print_exc()
-				
-				if groupchat in LAST['gch'].keys():
-					if GCHCFGS[groupchat]['autoaway']==1:
-						LAST['gch'][groupchat]['thr']=threading.Timer(600,change_bot_status,(groupchat, u'I am not doing anything here till '+time.strftime('%d.%m.%Y@%H:%M:%S GMT.', time.gmtime()), 'away',1))
-						try:
-							LAST['gch'][groupchat]['thr'].start()
-						except RuntimeError:
-							if ERRORS_DELIVERY:
-								msg(ADMINS[0],traceback.format_exc(0))
-							else:
-								traceback.print_exc()
-	else:
-		print 'Error: unable to create chatrooms list file!'
+#   load_plugins()
+   
 
-	print '\nOk, now i\'m ready to work :)\n'
-		
-	INFO['start'] = time.time()
-	upkeep()
-	for process in STAGE2_INIT:
-		with smph:
-			INFO['thr'] += 1
-			try:
-				threading.Thread(None,process,'stage2_init'+str(INFO['thr'])).start()
-			except RuntimeError:
-				if ERRORS_DELIVERY:
-					msg(ADMINS[0],traceback.format_exc(0))
-				else:
-					traceback.print_exc()			
-	while 1:
-		JCON.Process(10)
+   print '\nOk, now i\'m ready to work :)\n'
+      
+   INFO['start'] = time.time()
+   upkeep()
+   for process in STAGE2_INIT:
+      with smph:
+         INFO['thr'] += 1
+         threading.Thread(None,process,'stage2_init'+str(INFO['thr'])).start()
+         
+   while 1:
+      JCON.Process(10)
 
 if __name__ == "__main__":
-	try:
-		start()
-	except KeyboardInterrupt:
-		print '\nINTERUPT (Ctrl+C)'
-		prs=xmpp.Presence(typ='unavailable')
-		prs.setStatus(u'got Ctrl-C -> shutdown')
-		JCON.send(prs)
-		time.sleep(2)
-		print 'DISCONNECTED'
-		print '\n...---===BOT STOPPED===---...\n'
-		sys.exit(0)
-	except:
-		if AUTO_RESTART:
-			traceback.print_exc()
-			try:
-				JCON.disconnected()
-			except IOError:
-				pass
-			try:
-				time.sleep(5)
-			except KeyboardInterrupt:
-				print '\nINTERUPT (Ctrl+C)'
-				prs=xmpp.Presence(typ='unavailable')
-				prs.setStatus(u'got Ctrl-C -> shutdown')
-				JCON.send(prs)
-				time.sleep(2)
-				print 'DISCONNECTED'
-				print '\n...---===BOT STOPPED===---...\n'
-				sys.exit(0)
-				print 'WAITING FOR RESTART...'
-			print 'RESTARTING'
-			os.execl(sys.executable, sys.executable, sys.argv[0])
-		else:
-			raise
+   try:
+      start()
+   except KeyboardInterrupt:
+      print '\nINTERUPT (Ctrl+C)'
+      prs=xmpp.Presence(typ='unavailable')
+      prs.setStatus(u'got Ctrl-C -> shutdown')
+      JCON.send(prs)
+      time.sleep(2)
+      print 'DISCONNECTED'
+      print '\n...---===BOT STOPPED===---...\n'
+      sys.exit(0)
+   except:
+      if AUTO_RESTART:
+#         if sys.exc_info()[0] is not SystemExit:
+         traceback.print_exc()
+         try:
+            JCON.disconnected()
+         except IOError:
+            pass
+         try:
+            time.sleep(5)
+         except KeyboardInterrupt:
+            print '\nINTERUPT (Ctrl+C)'
+            prs=xmpp.Presence(typ='unavailable')
+            prs.setStatus(u'got Ctrl-C -> shutdown')
+            JCON.send(prs)
+            time.sleep(2)
+            print 'DISCONNECTED'
+            print '\n...---===BOT STOPPED===---...\n'
+            sys.exit(0)
+            print 'WAITING FOR RESTART...'
+         print 'RESTARTING'
+         os.execl(sys.executable, sys.executable, sys.argv[0])
+      else:
+         raise
+

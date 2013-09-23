@@ -3,10 +3,10 @@
 #for help. join us on http://socialzone.mine.nu                           #
 # Tron's Config file Rev 1.1                                              #
 #-------------------------------------------------------------------------#
-CONNECT_SERVER = gmail.com
+CONNECT_SERVER = xtreme.im
 PORT = 5222 
-JID = socialzoneuk@gmail.com
-PASSWORD = **********
+JID = tron@xtreme.im
+PASSWORD = 
 RESOURCE = PyTron
 
 # TLS/SSL, if no need, comment or leave as is
@@ -22,7 +22,7 @@ USE_TLS_SSL = 1
 
 # Default chatroom, uncomment and specify if needed
 #--------------------------------------------------
-DEFAULT_CHATROOM = support@conference.socialzone.mine.nu
+DEFAULT_CHATROOM = socialzone@conference.xmpp.ru
 
 # Chatroom nick
 #---------------
@@ -34,8 +34,8 @@ KEEP_ALIVE = 300
 
 # Jabber accounts that will administrate fatal
 #---------------------------------------------
-ADMINS = marcus@socialzone.mine.nu
-ADMIN_PASSWORD = ************
+ADMINS = admin-of-bot@xtreme.im
+ADMIN_PASSWORD = 
 USER_PASSWORD = tron4 # this will be explained in the next release
 
 # Controls delivery of all private-messages in bot-roster to admin jids
@@ -60,7 +60,7 @@ SHOW_CONSOLE = 1
 
 # Tron's Command prefix. For example: . or !
 #----------------------------------------------------------
-COMM_PREFIX = ,
+COMM_PREFIX = $
 
 # Msg chatrooms&private limits
 #-----------------------------

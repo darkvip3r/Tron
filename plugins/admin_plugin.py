@@ -545,21 +545,7 @@ def handler_delivery(type,source,body):
 				
 				for adli in ADMINS:
 					msg(adli,rep)
-				
-def handler_admin_subscription():
-	for adli in ADMINS:
-		gsubs = ''
-		
-		if adli in ROSTER.getItems():
-			gsubs = ROSTER.getSubscription(adli)
-		
-		admin_id = adli.split('@')[0]
-		
-		if not gsubs:
-			ROSTER.setItem(adli,admin_id,['marcus@jabberuk.dyndns.org'])
-			
-		if gsubs != 'both':
-			ROSTER.Subscribe(adli)
+
 				
 register_command_handler(handler_admin_join, COMM_PREFIX+'join', ['superadmin','muc','all','*'], 0, 'Join to a conference, if there is a password write that password right after the name of conference.', COMM_PREFIX+'join <conference> [pass=1234] [botnick]', [COMM_PREFIX+'join botzone@conference.jabberuk.dyndns.org', COMM_PREFIX+'join join botzone@conference.jsmart.web.id somebot', COMM_PREFIX+'join join botzone@conference.jsmart.web.id pass=1234 somebot'])
 register_command_handler(handler_admin_leave, COMM_PREFIX+'leave', ['admin','muc','all','*'], 40, 'Leave bot from the current or a specific conference.', COMM_PREFIX+'leave <conference> [reason]', [COMM_PREFIX+'leave botzone@conference.jabberuk.dyndns.org (reason = sleep', COMM_PREFIX+'leave sleep',COMM_PREFIX+'leave'])
@@ -579,4 +565,4 @@ register_command_handler(handler_redirect, COMM_PREFIX+'redirect', ['admin','muc
 register_stage1_init(get_autoaway_state)
 #register_stage1_init(set_default_gch_status)
 register_message_handler(handler_delivery)
-register_stage2_init(handler_admin_subscription)
+#register_stage2_init(handler_admin_subscription)
